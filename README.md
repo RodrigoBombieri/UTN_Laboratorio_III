@@ -1,13 +1,13 @@
 # UTN_Laboratorio_III
 
 #1 - Introducción a Bases de Datos. Introducción a SQL Server. Características de las bases de datos relacionales. Concepto de restricción. Restricción de Primary Key, Foreign Key, Check, Unique y Default.</br>
-<p color=green>Actividad 1.1</p>
-Actividad 1.2</br>
+**Actividad 1.1**</p>
+**Actividad 1.2**</br>
 #2 - Introducción a Normalización de Base de Datos. 1FN, 2FN, 3FN. Creación de bases de datos utilizando T-SQL. Restricciones Primary Key y Foreign Key complejas. Consultas de Inserción.</br>
-Actividad de Normalización</br>
+**Actividad de Normalización**</br>
 #3 - Creación de bases de datos utilizando T-SQL. Consultas de modificación y eliminación. Cláusula Where con operador =</br>
 #4 - Consultas de Selección: WHERE, ORDER BY, DISTINCT Funciones SQL: DATEADD, DATEDIFF, GETDATE, DATEPART</br>
-Actividad 2.1</br>
+**Actividad 2.1**</br>
 #5 - Consultas de selección: Joins</br>
 #6 - Consultas de selección: Funciones de resumen</br>
 #7 - Consultas de selección: Subconsultas</br>
