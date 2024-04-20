@@ -9,6 +9,7 @@
 #4 - Consultas de Selección: WHERE, ORDER BY, DISTINCT Funciones SQL: DATEADD, DATEDIFF, GETDATE, DATEPART</br>
 **Actividad 2.1**</br>
 #5 - Consultas de selección: Joins</br>
+**Actividad 2.2**</br>
 #6 - Consultas de selección: Funciones de resumen</br>
 #7 - Consultas de selección: Subconsultas</br>
 #8 - Actividad Integradora</br>
