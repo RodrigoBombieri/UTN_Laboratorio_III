@@ -79,7 +79,7 @@ INNER JOIN Certificaciones AS CF ON I.ID = CF.IDInscripcion
 
 -- 9) Listado de cursos con nombre, costo de cursado y certificación, costo total(cursado+certificación)
 -- con 10% de todos los cursos de nivel principiante.
-Select TOP (10) PERCENT  C.Nombre, C.CostoCurso, C.CostoCertificacion, C.CostoCurso + C.CostoCertificacion AS "Costo Total"
+Select TOP (10) PERCENT C.Nombre, C.CostoCurso, C.CostoCertificacion, C.CostoCurso + C.CostoCertificacion AS "Costo Total"
 From Cursos AS C
 INNER JOIN Niveles AS N ON C.IDNivel = N.ID
 WHERE N.Nombre = 'Principiante'
@@ -105,7 +105,83 @@ WHERE CAT.Nombre = 'Historia'
 -- Listar todos los idiomas indistintamente si no tiene cursos relacionados.
 Select I.Nombre, C.ID AS "Código de Curso", IXC.IDFormatoIdioma AS "Código de tipo de idioma"
 From Idiomas AS I
-CROSS JOIN Cursos AS C
-LEFT JOIN Idiomas_x_Curso AS IXC ON C.ID = IXC.IDCurso AND I.ID = IXC.IDIdioma
+LEFT JOIN Idiomas_x_Curso AS IXC ON I.ID = IXC.IDIdioma
+LEFT JOIN Cursos AS C ON IXC.IDCurso = C.ID
 
 -- 13) Listado con nombre de idioma de todos los idiomas que no tienen cursos relacionados
+SELECT I.Nombre AS 'Nombre de Idioma'
+FROM Idiomas AS I
+LEFT JOIN Idiomas_x_Curso AS IXC ON I.ID = IXC.IDIdioma
+WHERE IXC.IDCurso IS NULL
+
+-- 14) Listado con nombres de idiomas que figuren como audio de algún curso. Sin repeticiones.
+Select DISTINCT I.Nombre AS 'Idioma'
+From Idiomas AS I
+INNER JOIN Idiomas_x_Curso AS IXC ON I.ID = IXC.IDIdioma
+INNER JOIN FormatosIdioma AS FI ON IXC.IDFormatoIdioma = FI.ID
+WHERE FI.Nombre = 'Audio'
+
+-- 15) Listado con nombres y apellidos de todos los usuarios y el nombre del país en
+-- el que nacieron. Listar todos los paises indistintamente si no tienen usuarios relacionados.
+Select D.Nombres, D.Apellidos, P.Nombre AS Pais
+FROM Usuarios AS U
+INNER JOIN Datos_Personales AS D ON U.ID = D.ID
+INNER JOIN Localidades AS L ON D.IDLocalidad = L.ID
+RIGHT JOIN Paises AS P ON L.IDPais = P.ID
+
+-- 16) Listado con nombre de curso, fecha de estreno y nombres de usuario de todos los inscriptos.
+-- Listar todos los nombres de usuario indistintamente si no se inscribieron a ningún curso.
+Select C.Nombre as Curso, C.Estreno as "Fecha de estreno", U.NombreUsuario as "Nombre de usuario"
+From Cursos as C
+inner join Inscripciones as I ON C.ID = I.IDCurso
+right join Usuarios AS U ON I.IDUsuario = U.ID
+
+-- 17) Listado con nombre de usuario, apellido, nombres, genero, fecha de nacimiento y mail
+-- de todos los usuarios que no cursaron ningún curso.
+Select U.NombreUsuario as "Nombre de Usuario", D.Apellidos, D.Nombres, D.Genero, D.Nacimiento, D.Email
+From Datos_Personales as D
+inner join Usuarios as U on D.ID = u.ID
+left join Inscripciones as I on U.ID = I.IDUsuario
+Where I.ID IS NULL
+
+-- 18) Listado con nombre y apellido, nombre del curso, puntaje otorgado, y texto de la reseña.
+-- Sólo de aquellos usuarios que hayan realizado una reseña inapropiada.
+Select D.Nombres, D.Apellidos, C.Nombre as Curso, R.Puntaje, R.Observaciones
+From Datos_Personales as D
+inner join Usuarios as U ON D.ID = U.ID
+inner join Inscripciones as I ON U.ID = I.IDUsuario
+right join Reseñas as R ON I.ID = R.IDInscripcion
+inner join Cursos as C ON I.IDCurso = C.ID
+Where R.Inapropiada = 1
+
+-- 19) Listado con nombre del curso, costo de cursado, costo de certificación, nombre del idioma,
+-- y nombre del tipo de idioma de todos los cursos cuya fecha de estreno haya sido antes del año actual.
+-- Ordenado por nombre del curso y luego por nombre de tipo de idioma. Ambos ascendentemente.
+Select C.Nombre as Curso, C.CostoCurso as "Costo del curso", C.CostoCertificacion as "Costo de Certificación",
+I.Nombre as Idioma, FI.Nombre as "Formato de idioma"
+From Cursos as C
+inner join Idiomas_x_Curso AS IXC ON C.ID = IXC.IDCurso
+inner join Idiomas AS I ON IXC.IDIdioma = I.ID
+inner join FormatosIdioma AS FI ON IXC.IDFormatoIdioma = FI.ID
+Where YEAR(C.Estreno) < YEAR(GETDATE())
+Order By Curso ASC,
+"Formato de idioma" ASC
+
+-- 20) Listado con nombre del curso y todos los importes de los pagos relacionados.
+Select C.Nombre as Cursos, P.Importe AS "Importe de Pago"
+From Cursos as C
+inner join Inscripciones as I ON C.ID = I.IDCurso
+inner join Pagos as P ON I.ID = P.IDInscripcion
+
+
+-- 21) Listado con nombre del curso, costo de cursado y una leyenda que indique "Costoso"
+-- si el costo de cursado es mayor a $ 15000, "Accesible" si el costo de cursado está entre $2500 y $15000,
+-- "Barato" si el costo está entre $1 y $2499 y "Gratis" si el costo es $0.
+Select C.Nombre AS Curso, C.CostoCurso AS "Costo de Cursado",
+CASE
+	WHEN C.CostoCurso > 15000 THEN 'Costoso'
+	WHEN C.CostoCurso <= 15000 and C.CostoCurso >= 2500 THEN 'Accesible'
+	WHEN C.CostoCurso < 2500 and C.CostoCurso >= 1 THEN 'Barato'
+	WHEN C.CostoCurso = 0 THEN 'Gratis'
+END AS 'Leyenda'
+From Cursos as C
