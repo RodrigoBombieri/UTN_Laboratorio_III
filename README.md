@@ -11,6 +11,7 @@
 #5 - Consultas de selección: Joins</br>
 **Actividad 2.2**</br>
 #6 - Consultas de selección: Funciones de resumen</br>
+**Actividad 2.3**</br>
 #7 - Consultas de selección: Subconsultas</br>
 #8 - Actividad Integradora</br>
 #9 - Funciones, vistas y procedimientos almacenados</br>
