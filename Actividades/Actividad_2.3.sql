@@ -87,6 +87,29 @@ inner join Contenidos as CO ON CL.ID = CO.IDClase
 Group By C.Nombre
 Having COUNT(CO.ID) > 10
 
+-- 18) Listado con nombre del curso, nombre del idioma y cantidad de tipos de idiomas.
+Select C.Nombre as Curso, I.Nombre as Idioma, COUNT(FI.ID) as "Cantidad de tipos de idiomas"
+From Cursos as C
+inner join Idiomas_x_Curso as IXC ON C.ID = IXC.IDCurso
+inner join Idiomas as I ON IXC.IDIdioma = I.ID
+inner join FormatosIdioma as FI ON IXC.IDFormatoIdioma = FI.ID
+Group By C.Nombre, I.Nombre
+
+-- 19) Listado con el nombre del curso y cantidad de idiomas distintos disponibles.
+Select C.Nombre as Curso, COUNT(distinct IXC.IDIdioma) as "Idiomas distintos disponibles"
+From Cursos as C
+inner join Idiomas_x_Curso as IXC ON C.ID = IXC.IDCurso
+Group By C.Nombre, C.ID
+
+-- 20) Listado de categorías de curso y cantidad de cursos asociadas a cada categoría.
+-- Sólo mostrar las categorías con más de 5 cursos.
+Select CAT.Nombre as Categoria, COUNT(CXC.IDCurso) AS "Cantidad de cursos"
+From Cursos as C
+inner join Categorias_x_Curso as CXC ON C.ID = CXC.IDCurso
+inner join Categorias as CAT ON CXC.IDCategoria = CAT.ID
+Group By CAT.Nombre, CAT.ID
+Having COUNT(CXC.IDCurso) > 5
+
 
 
 
