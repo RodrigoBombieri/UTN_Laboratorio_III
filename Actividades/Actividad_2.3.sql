@@ -1,7 +1,6 @@
 -- ACTIVIDAD 2.3 --
 -- Consultas de Selección - Funciones de resumen --
 
-
 -- 1) Listado con cantidad de cursos.
 Select COUNT(ID) as "Cantidad de Cursos" From Cursos
 
@@ -80,7 +79,7 @@ Group By C.Nombre, N.Nombre
 
 -- 17) Listado con el nombre del curso y cantidad de contenidos registrados. Sólo listar
 -- aquellos cursos que tengan más de 10 contenidos registrados.
-Select C.Nombre as Curso, COUNT(CO.ID) as "Contenidos Registrados"
+Select C.Nombre as Curso, COUNT(distinct CO.ID) as "Contenidos Registrados"
 From Cursos as C
 inner join Clases as CL ON C.ID = CL.IDCurso
 inner join Contenidos as CO ON CL.ID = CO.IDClase
@@ -109,6 +108,98 @@ inner join Categorias_x_Curso as CXC ON C.ID = CXC.IDCurso
 inner join Categorias as CAT ON CXC.IDCategoria = CAT.ID
 Group By CAT.Nombre, CAT.ID
 Having COUNT(CXC.IDCurso) > 5
+
+-- 21) Listado con tipos de contenido y la cantidad de contenidos asociados a cada tipo.
+-- Mostrar también aquellos tipos que no hayan registrado contenidos con cantidad 0.
+Select TC.Nombre as "Tipo de Contenido", COUNT(CO.ID) AS "Cantidad de Contenidos"
+From Contenidos as CO
+right join TiposContenido as TC ON CO.IDTipo = TC.ID
+Group By TC.Nombre
+
+-- 22) Listado con nombre del curso, nivel, año de estreno y total recaudado en concepto de
+-- inscripciones. Listar también aquellos cursos sin inscripciones con total igual a $0.
+Select C.Nombre as Curso, N.Nombre as Nivel, C.Estreno, SUM(I.Costo) as "Total Inscripciones"
+From Cursos as C
+left join Inscripciones as I ON C.ID = I.IDCurso
+inner join Niveles as N ON C.IDNivel = N.ID
+Group By C.Nombre, N.Nombre, C.Estreno
+
+-- 23) Listado con Nombre del curso, costo de cursado y certificación y cantidad de usuarios
+-- distintos inscriptos cuyo costo de cursado sea menor a $10000 y cuya cantidad de usuarios 
+-- inscriptos sea menor a 5. Listar también aquellos cursos sin inscripciones con cantidad 0.
+Select C.Nombre as Curso, C.CostoCurso, C.CostoCertificacion, COUNT(distinct I.IDUsuario) as "Usuarios Inscriptos"
+From Cursos as C
+left join Inscripciones as I ON C.ID = I.IDCurso
+--left join Usuarios as U ON I.IDUsuario = U.ID
+Where C.CostoCurso < 10000 
+Group By C.ID, C.Nombre, C.CostoCurso, C.CostoCertificacion
+Having COUNT(I.IDUsuario) < 5 --> NO MUESTRA EL CURSO 16 QUE TIENE 0 Inscripciones
+
+-- 24) Listado con Nombre del curso, fecha de estreno y nombre del nivel del curso que
+-- más recaudó en concepto de certificaciones.
+Select TOP 1 C.Nombre as Curso, C.Estreno, N.Nombre as Nivel, MAX(CE.Costo) as "Recaudación por certificaciones"
+From Cursos as C
+inner join Niveles as N ON C.IDNivel = N.ID
+inner join Inscripciones as I ON C.ID = I.IDCurso
+inner join Certificaciones as CE ON I.ID = CE.IDInscripcion
+Group By C.Nombre, C.Estreno, N.Nombre
+Order By MAX(CE.Costo) desc
+
+-- 25) Listado con Nombre del idioma, del idioma más utilizado como subtítulo.
+Select TOP 1 I.Nombre as Idioma, COUNT(FI.ID) AS "Idioma más utilizado como subtítulo"
+From Idiomas as I
+inner join Idiomas_x_Curso as IXC ON I.ID = IXC.IDIdioma
+inner join FormatosIdioma as FI ON IXC.IDFormatoIdioma = FI.ID
+Where FI.ID = 1
+Group By I.Nombre
+Order By [Idioma más utilizado como subtítulo] DESC
+
+-- 26) Listado con Nombre del curso y promedio de puntaje de reseñas apropiadas.
+Select C.Nombre as Curso, AVG(R.Puntaje) as "Promedio de puntaje de reseñas apropiadas"
+From Cursos as C
+inner join Inscripciones as I ON C.ID = I.IDCurso
+inner join Reseñas as R ON I.ID = R.IDInscripcion
+Where R.Inapropiada = 0
+Group By C.Nombre
+
+-- 27) Listado con Nombre de usuario y la cantidad de reseñas inapropiadas que registró.
+Select U.NombreUsuario, COUNT(R.Inapropiada) as "Reseñas inapropiadas"
+From Usuarios as U
+inner join Inscripciones as I ON U.ID = I.IDUsuario
+inner join Reseñas as R ON I.ID = R.IDInscripcion
+Where R.Inapropiada = 1
+Group By U.NombreUsuario
+
+-- 28) Listado con Nombre del curso, nombre y apellidos de usuarios y la cantidad 
+-- de veces que dicho usuario realizó dicho curso. 
+-- No mostrar cursos y usuarios que contabilicen cero.
+Select C.Nombre as Curso, DP.Apellidos, DP.Nombres, COUNT(U.ID) as "Cantidad de usuarios"
+From Cursos as C
+inner join Inscripciones as I ON C.ID = I.IDCurso
+inner join Usuarios as U ON I.IDUsuario = U.ID
+inner join Datos_Personales as DP ON U.ID = DP.ID
+Group By C.Nombre, DP.Apellidos, Dp.Nombres
+
+-- 29) Listado con Apellidos y nombres, mail y duración total en concepto de clases de cursos
+-- a los que se haya inscripto. Sólo listar información de aquellos registros cuya 
+-- duración total supere los 400 minutos.
+Select DP.Apellidos + ', ' + DP.Nombres as "Apellido y Nombre", DP.Email, SUM(CL.Duracion) as "Duración en minutos"
+From Datos_Personales as DP
+inner join Inscripciones as I ON DP.ID = I.IDUsuario
+inner join Cursos as C ON I.IDCurso = C.ID
+inner join Clases as CL ON C.ID = CL.IDCurso
+Group By DP.Apellidos + ', ' + DP.Nombres, DP.Email
+Having SUM(CL.Duracion) > 400
+
+-- 30) Listado con nombre del curso y recaudación total. La recaudación total consiste 
+-- en la sumatoria de costos de inscripción y de certificación. 
+-- Listarlos ordenados de mayor a menor por recaudación.
+Select C.Nombre as Curso, SUM(I.Costo + CE.Costo) as "Recaudación Total"
+From Cursos as C
+inner join Inscripciones as I ON C.ID = I.IDCurso
+inner join Certificaciones as CE ON I.ID = CE.IDInscripcion
+Group By C.Nombre
+Order By [Recaudación Total] desc
 
 
 
