@@ -147,20 +147,37 @@ From Cursos as C
 
 -- 12) Listado con nombre de país de aquellos que hayan registrado más usuarios de 
 -- género masculino que de género femenino.
-SELECT P.Nombre AS País
-FROM Paises AS P
-INNER JOIN Localidades AS L ON P.ID = L.IDPais
-INNER JOIN Datos_Personales AS DP ON L.ID = DP.IDLocalidad
-GROUP BY P.Nombre
-HAVING SUM(CASE WHEN DP.Genero = 'M' THEN 1 ELSE 0 END) > SUM(CASE WHEN DP.Genero = 'F' THEN 1 ELSE 0 END)
+Select Aux.* From(
+	Select P.Nombre,
+(
+	Select COUNT(DP.Genero) From Datos_Personales AS DP
+	INNER JOIN Localidades AS L ON DP.IDLocalidad = L.ID
+	Where DP.Genero LIKE 'M' AND L.IDPais = P.ID	
+)AS Masculinos,
+(
+	Select COUNT(DP.Genero) From Datos_Personales AS DP
+	INNER JOIN Localidades AS L ON DP.IDLocalidad = L.ID
+	Where DP.Genero LIKE 'F' AND L.IDPais = P.ID	
+) AS Femeninos
+From Paises AS P
+) AS Aux
+Where Masculinos > Femeninos
 
 -- 13) Listado con nombre de país de aquellos que hayan registrados más usuarios de
 -- género masculino que de género femenino pero que haya registado al menos un usuario 
 -- de género femenino
-SELECT P.Nombre AS País
-FROM Paises AS P
-INNER JOIN Localidades AS L ON P.ID = L.IDPais
-INNER JOIN Datos_Personales AS DP ON L.ID = DP.IDLocalidad
-GROUP BY P.Nombre
-HAVING SUM(CASE WHEN DP.Genero = 'M' THEN 1 ELSE 0 END) > SUM(CASE WHEN DP.Genero = 'F' THEN 1 ELSE 0 END)
-AND SUM(CASE WHEN DP.Genero = 'F' THEN 1 ELSE 0 END) > 0
+Select Aux.* From(
+	Select P.Nombre as País,
+	(
+		Select COUNT(DP.Genero) From Datos_Personales as DP
+		inner join Localidades as L ON DP.IDLocalidad = L.ID
+		Where DP.Genero LIKE 'M' AND L.IDPais = P.ID
+	) AS Masculinos,
+	(
+		Select COUNT(DP.Genero) From Datos_Personales as DP
+		INNER JOIN Localidades AS L ON DP.IDLocalidad = L.ID
+		Where DP.Genero LIKE 'F' AND L.IDPais = P.ID
+	) AS Femeninos
+	From Paises AS P
+) AS Aux
+Where Masculinos > Femeninos And Femeninos > 0
