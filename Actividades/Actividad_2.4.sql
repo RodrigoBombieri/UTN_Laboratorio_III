@@ -166,6 +166,7 @@ Where Masculinos > Femeninos
 -- 13) Listado con nombre de país de aquellos que hayan registrados más usuarios de
 -- género masculino que de género femenino pero que haya registado al menos un usuario 
 -- de género femenino
+-- Listando el nombre del país y la cantidad de M y F
 Select Aux.* From(
 	Select P.Nombre as País,
 	(
@@ -181,3 +182,70 @@ Select Aux.* From(
 	From Paises AS P
 ) AS Aux
 Where Masculinos > Femeninos And Femeninos > 0
+
+-- 13) Listando solamente el nombre del país:
+Select P.Nombre as País
+From Paises as P
+Where(
+	Select COUNT(DP.Genero) From Datos_Personales as DP
+	inner join Localidades as L ON DP.IDLocalidad = L.ID
+	Where DP.Genero LIKE 'M' AND L.IDPais = P.ID
+) > (
+	Select COUNT(DP.Genero) From Datos_Personales as DP
+	INNER JOIN Localidades AS L ON DP.IDLocalidad = L.ID
+	Where DP.Genero LIKE 'F' AND L.IDPais = P.ID
+) And (
+	Select COUNT(DP.Genero) From Datos_Personales as DP
+	INNER JOIN Localidades AS L ON DP.IDLocalidad = L.ID
+	Where DP.Genero LIKE 'F' AND L.IDPais = P.ID
+) > 0
+
+-- 14) Listado de cursos que hayan registrado la misma cantidad de idiomas de audio
+-- que de subtítulos.
+Select C.Nombre AS Curso
+From Cursos AS C
+Where (
+    Select COUNT(IXC.IDIdioma)
+    From Idiomas_x_Curso AS IXC
+    INNER JOIN FormatosIdioma AS FI ON IXC.IDFormatoIdioma = FI.ID
+    Where FI.Nombre LIKE 'Audio' AND IXC.IDCurso = C.ID
+) = (
+    Select COUNT(IXC.IDIdioma)
+    From Idiomas_x_Curso AS IXC
+    INNER JOIN FormatosIdioma AS FI ON IXC.IDFormatoIdioma = FI.ID
+    Where FI.Nombre LIKE 'Subtitulo' AND IXC.IDCurso = C.ID
+)
+
+-- 15) Listado de usuarios que hayan realizado más cursos en 2018 que en 2019,
+-- y a su vez más cursos en 2019 que en 2020.
+Select Aux.*From (
+	Select U.NombreUsuario,
+	(
+		Select COUNT(C.ID) From Cursos as C
+		INNER JOIN Inscripciones AS I ON C.ID = I.IDCurso
+		Where YEAR(I.Fecha) = 2018 AND I.IDUsuario = U.ID
+	) AS Cursos_2018,
+	(
+		Select COUNT(C.ID) From Cursos as C
+		INNER JOIN Inscripciones AS I ON C.ID = I.IDCurso
+		Where YEAR(I.Fecha) = 2019 AND I.IDUsuario = U.ID
+	) AS Cursos_2019,
+	(
+		Select COUNT(C.ID) From Cursos as C
+		INNER JOIN Inscripciones as I ON C.ID = I.IDCurso
+		Where YEAR(I.Fecha) = 2020 AND I.IDUsuario = U.ID
+	) AS Cursos_2020
+	From Usuarios as U
+) AS Aux
+Where Aux.Cursos_2018 > Aux.Cursos_2019 AND Aux.Cursos_2019 > Aux.Cursos_2020
+
+-- 16) Listado con apellido y nombres de usuarios que hayan realizado cursos pero
+-- nunca se hayan certificado.
+-- Aclaración: listado con apellido y nombres de usuarios que hayan realizado 
+-- al menos un curso y no se hayan certificado nunca.
+Select DISTINCT DP.Apellidos, DP.Nombres, CE.IDInscripcion, COUNT(C.ID) AS CantidadCursos From Datos_Personales as DP
+inner join Inscripciones as I ON DP.ID = I.IDUsuario
+INNER JOIN Cursos AS C ON I.IDCurso = C.ID
+LEFT JOIN Certificaciones AS CE ON I.ID = CE.IDInscripcion
+Where CE.IDInscripcion IS NULL
+Group By DP.Apellidos, DP.Nombres, CE.IDInscripcion
