@@ -13,6 +13,7 @@
 #6 - Consultas de selección: Funciones de resumen</br>
 **Actividad 2.3**</br>
 #7 - Consultas de selección: Subconsultas</br>
+**Actividad 2.4**</br>
 #8 - Actividad Integradora</br>
 #9 - Funciones, vistas y procedimientos almacenados</br>
 #10 - Procedimientos Almacenados y transacciones</br>
