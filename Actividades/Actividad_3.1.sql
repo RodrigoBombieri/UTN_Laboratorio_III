@@ -139,3 +139,72 @@ SELECT * FROM VW_DatosUsuario
 SELECT COUNT(*) AS "Usuarios que adeudan más de lo que pagaron" FROM VW_DatosUsuario
 WHERE dbo.FN_DeudaxUsuario(ID) > dbo.FN_PagosxUsuario(ID)
 
+-- 7) Hacer un procedimiento almacenado que permita dar de alta un nuevo curso.
+-- Debe recibir todos los valores necesarios para poder insertar un nuevo registro.
+CREATE OR ALTER PROCEDURE SP_InsertarCurso(
+	@Nombre varchar(100),
+	@CostoCurso money,
+	@CostoCertificacion money,
+	@Estreno date,
+	@IDNivel smallint
+)
+AS BEGIN
+	INSERT INTO Cursos(Nombre, CostoCurso, CostoCertificacion, Estreno, IDNivel)
+	VALUES (@Nombre, @CostoCurso, @CostoCertificacion, @Estreno, @IDNivel)
+END
+
+
+-- Uso del Procedimiento Almacenado:
+EXEC SP_InsertarCurso 'Aprender SQL en 3 meses', 5000, 3500, '2024-02-02', 2
+GO
+
+
+-- 8) Hacer un procedimiento almacenado que permita modificar porcentualmente el Costo
+-- de Cursada de todos los cursos. El procedimiento debe recibir un valor numérico
+-- que representará el valor a aumentar porcentualmente. Por ejemplo si recibe un 60
+-- deberá aumentar un 60% todos los costos.
+CREATE OR ALTER PROCEDURE SP_AumentarCostoCursos(
+	@Aumento float
+)
+AS BEGIN
+	UPDATE Cursos SET CostoCurso = CostoCurso + (CostoCurso * @Aumento / 100)
+END
+
+-- Uso del procedimiento almacenado
+EXEC SP_AumentarCostoCursos 50
+
+--9) Hacer un procedimiento almacenado llamado SP_PagarInscripción que a partir
+-- de un IDInscripcion permita hacer un pago de la inscripción. El pago puede
+-- ser menor al costo de la inscripción o bien al total del mismo. El sistema
+-- no debe permitir que el usuario pueda abonar más dinero para una inscripción
+-- que el costo de la misma. Se debe registrar en la tabla de pagos con
+-- la información que corresponda.
+CREATE OR ALTER PROCEDURE SP_PagarInscripcion(
+	@IDInscripcion INT
+)
+AS BEGIN
+	DECLARE @CostoInscripcion DECIMAL;
+    DECLARE @MontoPago DECIMAL;
+    
+    SELECT @CostoInscripcion = Costo
+    FROM Inscripciones AS I
+    WHERE I.ID = @IDInscripcion;
+
+	SELECT @MontoPago = Importe
+	FROM Pagos AS P
+	WHERE P.ID = @IDInscripcion
+
+	IF @MontoPago >= @CostoInscripcion
+		BEGIN
+			RAISERROR('La inscripción ya ha sido completamente pagada.', 16, 0)
+			RETURN;
+		END
+	
+	DECLARE @SaldoPendiente DECIMAL;
+    SET @SaldoPendiente = @CostoInscripcion - @MontoPago;
+
+	INSERT INTO Pagos (IDInscripcion, Fecha, Importe)
+    VALUES (@IDInscripcion, GETDATE(), @SaldoPendiente);
+END
+-- Uso del procedimiento almacenado:
+EXEC SP_PagarInscripcion 2
