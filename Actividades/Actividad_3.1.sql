@@ -51,7 +51,7 @@ RETURNS money
 		END
 
 -- Uso de la Función:
-Select DISTINCT U.ID, U.NombreUsuario, SUM(I.Costo), SUM(P.Importe) AS "Pagado", dbo.FN_DeudaxUsuario(U.ID) as "Importe total adeudado"
+Select DISTINCT U.ID, U.NombreUsuario, SUM(I.Costo) AS Costo, SUM(P.Importe) AS "Pagado", dbo.FN_DeudaxUsuario(U.ID) as "Importe total adeudado"
 From Usuarios as U
 INNER join Inscripciones as I ON U.ID = I.IDUsuario
 INNER JOIN Pagos AS P ON I.ID = P.IDInscripcion
@@ -63,15 +63,15 @@ Go
 -- la edad del mismo. La edad es un valor entero.
 CREATE OR ALTER FUNCTION FN_CalcularEdad (@IDUsuario INT)
 RETURNS INT
-	AS
-		BEGIN
-			Declare @Edad int
+AS
+	BEGIN
+	Declare @Edad int
 
-			Select @Edad = 
-				CASE
-					WHEN MONTH(GETDATE()) > MONTH(DP.Nacimiento) OR
-					(MONTH(GETDATE()) = MONTH(DP.Nacimiento) AND DAY(GETDATE()) >= DAY(DP.Nacimiento))
-						THEN YEAR(GETDATE()) - YEAR(DP.Nacimiento)
+	Select @Edad = 
+		CASE
+			WHEN MONTH(GETDATE()) > MONTH(DP.Nacimiento) OR
+			(MONTH(GETDATE()) = MONTH(DP.Nacimiento) AND DAY(GETDATE()) >= DAY(DP.Nacimiento))
+			THEN YEAR(GETDATE()) - YEAR(DP.Nacimiento)
 					ELSE
 						YEAR(GETDATE()) - YEAR(DP.Nacimiento) -1
 				END
@@ -208,3 +208,40 @@ AS BEGIN
 END
 -- Uso del procedimiento almacenado:
 EXEC SP_PagarInscripcion 2
+
+-- 10) Hacer un procedimiento almacenado llamado SP_InscribirUsuario que reciba
+-- un IDUsuario y un IDCurso y realice la inscripción a dicho curso de ese usuario.
+-- El procedimiento debe realizar las siguientes comprobaciones:
+	-- El usuario no debe registrar deuda para poder inscribirse.
+	-- El usuario debe ser mayor de edad si el curso requiere esa condición.
+-- En caso que estas comprobaciones sean satisfechas entonces registrar la inscripción.
+-- Determinar el costo de la inscripción al valor actual del curso. Si alguna
+-- comprobación no se cumple, indicarlo con un mensaje de error correspondiente.
+CREATE OR ALTER PROCEDURE SP_InscribirUsuario (
+	@IDUsuario INT,
+	@IDCurso INT
+)
+AS BEGIN
+	-- Verificar si el usuario no tiene deuda
+	IF dbo.FN_DeudaxUsuario(@IDUsuario) > 0
+	BEGIN
+		RAISERROR ('El Usuario posee deuda, no se puede realizar la acción', 16, 1)
+		RETURN
+	END
+
+	-- Verificar si el usuario es mayor de edad.
+	Declare @MayorDeEdad bit
+	SET @MayorDeEdad = (SELECT DebeSerMayorDeEdad From Cursos WHERE Cursos.ID = @IDCurso)
+	IF DBO.FN_CalcularEdad(@IDUsuario) < 18 AND @MayorDeEdad = 1 
+	BEGIN
+		RAISERROR('El Curso requiere que el usuario sea mayor de edad', 16, 1)
+	END
+
+	Declare @CostoInscripcion money
+	SET @CostoInscripcion = (SELECT CostoCurso From Cursos WHERE Cursos.ID = @IDCurso)
+
+	INSERT INTO Inscripciones(IDUsuario, IDCurso, Fecha, Costo)
+	VALUES (@IDUsuario, @IDCurso, GETDATE(), @CostoInscripcion)
+END
+-- Uso del procedimiento Almacenado:
+EXEC SP_InscribirUsuario 1, 1
