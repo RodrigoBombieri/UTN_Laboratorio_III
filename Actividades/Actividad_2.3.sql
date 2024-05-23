@@ -167,7 +167,6 @@ Select U.NombreUsuario, COUNT(R.Inapropiada) as "Reseñas inapropiadas"
 From Usuarios as U
 inner join Inscripciones as I ON U.ID = I.IDUsuario
 inner join Reseñas as R ON I.ID = R.IDInscripcion
-Where R.Inapropiada = 1
 Group By U.NombreUsuario
 
 -- 28) Listado con Nombre del curso, nombre y apellidos de usuarios y la cantidad 
@@ -200,8 +199,6 @@ inner join Inscripciones as I ON C.ID = I.IDCurso
 inner join Certificaciones as CE ON I.ID = CE.IDInscripcion
 Group By C.Nombre
 Order By [Recaudación Total] desc
-
-
 
 
 

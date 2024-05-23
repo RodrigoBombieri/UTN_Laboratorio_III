@@ -3,16 +3,13 @@
 -- 1) Listado con nombre de usuario de todos los usuarios y sus respectivos nombres y apellidos.
 Select U.NombreUsuario AS "Nombre de Usuario", D.Apellidos, D.Nombres
 From Usuarios AS U
-INNER JOIN Datos_Personales AS D
-ON U.ID = D.ID
+INNER JOIN Datos_Personales AS D ON U.ID = D.ID
 
 -- 2) Listado con apellidos, nombres, fecha de nacimiento y nombre del país de nacimiento.
 Select D.Apellidos, D.Nombres, D.Nacimiento AS "Fecha De Nacimiento", P.Nombre AS País
 From Datos_Personales AS D
-INNER JOIN Localidades AS L
-ON D.IDLocalidad = L.ID
-INNER JOIN Paises AS P
-ON L.IDPais = P.ID
+INNER JOIN Localidades AS L ON D.IDLocalidad = L.ID
+INNER JOIN Paises AS P ON L.IDPais = P.ID
 
 -- 3) Listado con nombre de usuario, apellidos, nombres, email o celular de todos los
 -- usuarios que vivan en un domicilio que comience con vocal.
@@ -109,7 +106,7 @@ LEFT JOIN Idiomas_x_Curso AS IXC ON I.ID = IXC.IDIdioma
 LEFT JOIN Cursos AS C ON IXC.IDCurso = C.ID
 
 -- 13) Listado con nombre de idioma de todos los idiomas que no tienen cursos relacionados
-SELECT I.Nombre AS 'Nombre de Idioma'
+SELECT I.Nombre AS Idioma
 FROM Idiomas AS I
 LEFT JOIN Idiomas_x_Curso AS IXC ON I.ID = IXC.IDIdioma
 WHERE IXC.IDCurso IS NULL
@@ -142,7 +139,8 @@ Select U.NombreUsuario as "Nombre de Usuario", D.Apellidos, D.Nombres, D.Genero,
 From Datos_Personales as D
 inner join Usuarios as U on D.ID = u.ID
 left join Inscripciones as I on U.ID = I.IDUsuario
-Where I.ID IS NULL
+LEFT JOIN Cursos AS C ON I.IDCurso = C.ID
+Where C.ID IS NULL
 
 -- 18) Listado con nombre y apellido, nombre del curso, puntaje otorgado, y texto de la reseña.
 -- Sólo de aquellos usuarios que hayan realizado una reseña inapropiada.
@@ -150,7 +148,7 @@ Select D.Nombres, D.Apellidos, C.Nombre as Curso, R.Puntaje, R.Observaciones
 From Datos_Personales as D
 inner join Usuarios as U ON D.ID = U.ID
 inner join Inscripciones as I ON U.ID = I.IDUsuario
-right join Reseñas as R ON I.ID = R.IDInscripcion
+INNER join Reseñas as R ON I.ID = R.IDInscripcion
 inner join Cursos as C ON I.IDCurso = C.ID
 Where R.Inapropiada = 1
 
@@ -164,7 +162,7 @@ inner join Idiomas_x_Curso AS IXC ON C.ID = IXC.IDCurso
 inner join Idiomas AS I ON IXC.IDIdioma = I.ID
 inner join FormatosIdioma AS FI ON IXC.IDFormatoIdioma = FI.ID
 Where YEAR(C.Estreno) < YEAR(GETDATE())
-Order By Curso ASC,
+Order By C.Nombre ASC,
 "Formato de idioma" ASC
 
 -- 20) Listado con nombre del curso y todos los importes de los pagos relacionados.
