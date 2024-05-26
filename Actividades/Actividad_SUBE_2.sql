@@ -161,7 +161,6 @@ CREATE OR ALTER PROCEDURE SP_Agregar_Saldo(
 	@Importe MONEY
 )
 AS BEGIN
-	DECLARE @Credito CHAR
 	DECLARE @SaldoAnterior MONEY
 	DECLARE @MovimientoID BIGINT
 
